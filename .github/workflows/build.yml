@@ -1,34 +1,63 @@
-name: Build Kivy APK
+name: Build APK
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Clonar el repositorio
-      uses: actions/checkout@v3
+      # Paso 1: Clonar el repositorio con la versión actualizada de checkout
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Instalar dependencias
-      run: |
-        sudo apt update
-        sudo apt install -y python3 python3-pip openjdk-17-jdk unzip
-        pip install buildozer cython
+      # Paso 2: Instalar dependencias necesarias
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-dev build-essential openjdk-8-jdk unzip wget
 
-    - name: Accept Android SDK licenses
-      run: |
-        yes | sdkmanager --licenses
+      # Paso 3: Configurar y instalar el Android SDK
+      - name: Set up Android SDK
+        run: |
+          # Crear directorio para el Android SDK
+          mkdir -p $HOME/android-sdk
+          
+          # Descargar el Android SDK command line tools
+          wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -P $HOME/android-sdk
+          
+          # Extraer los tools
+          unzip $HOME/android-sdk/commandlinetools-linux-7583922_latest.zip -d $HOME/android-sdk
+          rm $HOME/android-sdk/commandlinetools-linux-7583922_latest.zip
+          
+          # Añadir al PATH y configurar ANDROID_HOME
+          export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
+          export ANDROID_HOME=$HOME/android-sdk
+          
+          # Instalar herramientas necesarias
+          yes | sdkmanager --licenses
+          sdkmanager --update
+          sdkmanager "build-tools;36.0.0-rc5" "platform-tools" "platforms;android-30" "ndk;21.4.7075529"
+          
+          # Verificar que sdkmanager se ejecuta
+          sdkmanager --list
 
-    - name: Install AIDL
-      run: sdkmanager "build-tools;36.0.0-rc5"
-      
-    - name: Compilar APK
-      run: |
-        buildozer android debug
+      # Paso 4: Instalar Buildozer
+      - name: Install Buildozer and dependencies
+        run: |
+          sudo apt-get install -y python3-setuptools
+          sudo apt-get install -y build-essential
+          pip3 install buildozer
 
-    - name: Guardar APK como artefacto
-      uses: actions/upload-artifact@v4
-      with:
-        name: MiAppKivy-APK
-        path: bin/*.apk
+      # Paso 5: Ejecutar la compilación con Buildozer usando el buildozer.spec del repositorio
+      - name: Build APK
+        run: buildozer android debug
+
+      - name: Guardar APK como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+         name: MiAppKivy-APK
+         path: bin/*.apk
