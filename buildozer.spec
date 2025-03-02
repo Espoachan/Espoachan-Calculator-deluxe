@@ -1,10 +1,9 @@
 [app]
 
 # (list) Application requirements
-# comma separated e.g. requirements = sqlite3,kivy
 requirements = python3,kivy,numpy
 
-# (str) Application versioning (method 1)
+# (str) Application versioning
 version = 0.1
 
 # (str) Application name
@@ -16,9 +15,12 @@ package.name = com.miappkivy
 # (str) Package domain (used for android/ios packaging)
 package.domain = org.kivy
 
+# (str) Directory for source code (this can be set to './' if your code is in the root directory)
+source.dir = .
+
 [buildozer]
 
-# (int) Log level (0 = quiet, 1 = normal, 2 = verbose)
+# (int) Log level
 log_level = 2
 
 # (str) Android NDK version to use
@@ -27,5 +29,3 @@ android.ndk = r21e
 # (str) Android SDK version to use
 android.sdk = 30
 
-# (bool) Copy libraries that are required to run the app (e.g. from site-packages)
-# android.copy_libs = True
