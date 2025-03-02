@@ -18,41 +18,44 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y python3-pip python3-dev build-essential openjdk-8-jdk unzip wget
+          sudo apt-get install -y python3-pip python3-dev build-essential openjdk-8-jdk unzip wget curl
 
-      # Paso 3: Configurar y instalar el Android SDK
+      # Paso 3: Configurar y descargar el Android SDK
       - name: Set up Android SDK
         run: |
           # Crear directorio para el Android SDK
-          mkdir -p $HOME/android-sdk
+          mkdir -p $HOME/android-sdk/cmdline-tools
           
           # Descargar el Android SDK command line tools
-          wget https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip -P $HOME/android-sdk
+          curl -o android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-7583922_latest.zip
           
           # Extraer los tools
-          unzip $HOME/android-sdk/commandlinetools-linux-7583922_latest.zip -d $HOME/android-sdk
-          rm $HOME/android-sdk/commandlinetools-linux-7583922_latest.zip
+          unzip android-sdk.zip -d $HOME/android-sdk/cmdline-tools
+          rm android-sdk.zip
           
           # Añadir al PATH y configurar ANDROID_HOME
           export PATH=$PATH:$HOME/android-sdk/cmdline-tools/latest/bin
           export ANDROID_HOME=$HOME/android-sdk
           
-          # Instalar herramientas necesarias
+          # Verificar que sdkmanager esté disponible
+          sdkmanager --version
+
+      # Paso 4: Aceptar licencias y configurar Android SDK
+      - name: Accept SDK licenses and install dependencies
+        run: |
           yes | sdkmanager --licenses
           sdkmanager --update
           sdkmanager "build-tools;36.0.0-rc5" "platform-tools" "platforms;android-30" "ndk;21.4.7075529"
-          
-          # Verificar que sdkmanager se ejecuta
           sdkmanager --list
 
-      # Paso 4: Instalar Buildozer
+      # Paso 5: Instalar Buildozer
       - name: Install Buildozer and dependencies
         run: |
           sudo apt-get install -y python3-setuptools
           sudo apt-get install -y build-essential
           pip3 install buildozer
 
-      # Paso 5: Ejecutar la compilación con Buildozer usando el buildozer.spec del repositorio
+      # Paso 6: Ejecutar la compilación con Buildozer usando el buildozer.spec del repositorio
       - name: Build APK
         run: buildozer android debug
 
